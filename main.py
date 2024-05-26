@@ -12,6 +12,23 @@ elif platform.system() == "Windows":
 
 fps = 15
 
+xywhs = {
+    "Darwin": {
+        "prompts": (900, 50, 1050, 110),
+        "signal": (600, 950, 680, 1035),
+        "speed": (720, 1033, 763, 1053),
+        "speedLimit": (720, 1050, 765, 1072),
+        "distanceToStation": (860, 1050, 1000, 1072)
+    },
+    "Windows": {
+        "prompts": (900, 50, 1050, 110),
+        "signal": (510, 923, 602, 1016),
+        "speed": (762, 1018, 814, 1046),
+        "speedLimit": (762, 1043, 823, 1064),
+        "distanceToStation": (873, 1045, 991, 1063)
+    }
+}
+
 RED = 1
 YELLOW = 2
 GREEN = 3
@@ -57,7 +74,7 @@ def main():
         orig_img.convert('RGB')
         
         # Prompts
-        xywh = (900, 50, 1050, 110)
+        xywh = xywhs[platform.system()]["prompts"]
         img = tesseract_image_fix(orig_img.crop(xywh), basewidth=500)
         img.save("prompts.png")
         prompts_text = pytesseract.image_to_string(img).lower()
@@ -88,7 +105,7 @@ def main():
         driving = True
         
         # Signal
-        xywh = (600, 950, 680, 1035)
+        xywh = xywhs[platform.system()]["signal"]
         img = orig_img.crop(xywh)
         img.save("signal.png")
         current_signal = GREEN
@@ -109,7 +126,7 @@ def main():
         orig_img = orig_img.convert('L')
         
         # Current Speed
-        xywh = (720, 1033, 763, 1053)
+        xywh = xywhs[platform.system()]["speed"]
         img = tesseract_image_fix(orig_img.crop(xywh))
         img.save("speed.png")
         speed_text = pytesseract.image_to_string(img)
@@ -120,7 +137,7 @@ def main():
         os.remove("speed.png")
         
         # Speed Limit
-        xywh = (720, 1050, 765, 1072)
+        xywh = xywhs[platform.system()]["speedLimit"]
         img = ImageOps.colorize(tesseract_image_fix(orig_img.crop(xywh)), black="black", white="white", mid="white")
         img.save("speedLimit.png")
         # has_yellow = False
@@ -148,7 +165,7 @@ def main():
         os.remove("speedLimit.png")
             
         # Distance to station
-        xywh = (860, 1050, 1000, 1072)
+        xywh = xywhs[platform.system()]["distanceToStation"]
         img = tesseract_image_fix(orig_img.crop(xywh), basewidth=500)
         img.save("distanceToStation.png")
         distance_to_station_text = pytesseract.image_to_string(img)
@@ -158,9 +175,6 @@ def main():
             driving = False
             slowing_for_station = False
             last_speed = -1
-            last_speed_time = -1
-            last_speed_change_time = -1
-            last_acceleration = -1
             continue
         distance_digits = ""
         for c in distance_to_station_text:
