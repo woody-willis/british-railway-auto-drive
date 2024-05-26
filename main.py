@@ -8,6 +8,7 @@ import platform
 if platform.system() == "Darwin":
     pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
 elif platform.system() == "Windows":
+    import pydirectinput as pgi
     pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
 fps = 15
@@ -22,10 +23,10 @@ xywhs = {
     },
     "Windows": {
         "prompts": (900, 50, 1050, 110),
-        "signal": (510, 923, 602, 1016),
-        "speed": (762, 1018, 814, 1046),
-        "speedLimit": (762, 1043, 823, 1064),
-        "distanceToStation": (873, 1045, 991, 1063)
+        "signal": (600, 950, 680, 1035),
+        "speed": (720, 1025, 763, 1053),
+        "speedLimit": (720, 1050, 765, 1072),
+        "distanceToStation": (873, 1050, 991, 1068)
     }
 }
 
@@ -46,16 +47,29 @@ def tesseract_image_fix(img, basewidth=100):
     return change_contrast(img, 100)
 
 def accelerate():
+    if platform.system() == "Windows":
+        pg = pgi
+    
     pg.keyDown('w')
     time.sleep(0.1)
     pg.keyUp('w')
     time.sleep(0.2)
     
 def brake():
+    if platform.system() == "Windows":
+        pg = pgi
+        
     pg.keyDown('s')
     time.sleep(0.1)
     pg.keyUp('s')
     time.sleep(0.2)
+    
+def press_key(key):
+    if platform.system() == "Windows":
+        pg = pgi
+        
+    pg.press(key)
+    time.sleep(0.5)
 
 def main():
     driving = True
@@ -70,7 +84,9 @@ def main():
         startT = time.time()
         
         # Get screenshot
-        orig_img = pg.screenshot(region=(0, 0, 1920, 1080))
+        orig_img = pg.screenshot()
+        orig_img = orig_img.resize((1920, 1080))
+        orig_img.save("screenshot.png")
         orig_img.convert('RGB')
         
         # Prompts
@@ -80,23 +96,23 @@ def main():
         prompts_text = pytesseract.image_to_string(img).lower()
         
         if "aws" in prompts_text:
-            pg.press('q')
+            press_key('q')
             time.sleep(0.5)
             continue
         
         if "open" in prompts_text and "doors" in prompts_text:
-            pg.press('t')
+            press_key('t')
             time.sleep(0.5)
             continue
         
         if "close" in prompts_text and "doors" in prompts_text and "closed" not in prompts_text:
             for i in range(4):
-                pg.press('t')
+                press_key('t')
                 time.sleep(0.5)
             throttle_notch = -4
             
         if "buzz" in prompts_text and "guard" in prompts_text:
-            pg.press('t')
+            press_key('t')
             time.sleep(0.5)
             throttle_notch = -4
             
