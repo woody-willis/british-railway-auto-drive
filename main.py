@@ -63,7 +63,7 @@ def main():
     
     last_speed = -1
     
-    throttle_notch = 0
+    throttle_notch = -4
     
     dt = 1/fps
     while True:
